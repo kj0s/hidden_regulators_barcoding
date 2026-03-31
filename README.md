@@ -16,3 +16,6 @@ method:
 understand what GENES cause these diff fate biases. If HSC A becomes erythroid-biased and HSC B becomes cDC-biased,what genes are different between them? 
 
 barcode data tells us the outcome [ which cell types were made ] and rna sequencing tells us the mechanism aka which genes were expressed. combining them means we can link genes and fate. 
+
+## working with cosine similarity vs corellation distance based metrics: A recent comparison has
+suggested that correlation-based distances may outperform other distance metrics when used with k-means or as the basis for Gaussian kernels (Kim et al, 2018). changing the code for fig 2 and 3 to reflect this change. 
