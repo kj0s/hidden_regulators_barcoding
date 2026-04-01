@@ -1,3 +1,4 @@
+## ASK FOR THE SPLINTR FILES TO GET THE BARCODES FILE
 # install sctransform
 install.packages("sctransform")
 BiocManager::install("glmGamPoi")
@@ -15,7 +16,7 @@ library(ComplexHeatmap)
 library(DoMultiBarHeatmap)
 
 #Import ST223.rna.singlets from ST223_omics_integration_and_demultiplexing
-ST223.rna.singlets <- readRDS("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/ST223.rna.singlets.rds")
+ST223.rna.singlets <- readRDS("/vast/projects/Sisseq/ST223/ST223.rna.singlets.rds")
 
 # Filter out poor quality cells
 ST223.rna.singlets[["percent.mt"]] <- PercentageFeatureSet(ST223.rna.singlets, pattern = "^MT-")
@@ -49,10 +50,10 @@ DimPlot(ST223.rna.singlets, reduction = "umap")
 dev.off()
 
 #ST223.rna.singlets  <- SCTransform(ST223.rna.singlets , vst.flavor = "v2", verbose = FALSE) %>%
-  #RunPCA(npcs = 20, verbose = FALSE) %>%
-  #RunUMAP(reduction = "pca", dims = 1:20, verbose = FALSE) %>%
-  #FindNeighbors(reduction = "pca", dims = 1:20, verbose = FALSE) %>%
-  #FindClusters(resolution = 0.7, verbose = FALSE)
+#RunPCA(npcs = 20, verbose = FALSE) %>%
+#RunUMAP(reduction = "pca", dims = 1:20, verbose = FALSE) %>%
+#FindNeighbors(reduction = "pca", dims = 1:20, verbose = FALSE) %>%
+#FindClusters(resolution = 0.7, verbose = FALSE)
 
 #Find marker genes
 # find markers for every cluster compared to all remaining cells, report only the positive
@@ -66,10 +67,29 @@ jpeg("gene_heatmap.jpeg", width = 3000, height = 3000, res = 300)
 DoHeatmap(ST223.rna.singlets, features = top10$gene) + NoLegend()
 dev.off()
 
+# 1. Scale specific genes for the heatmap to avoid the "omitted features" warning
+ST223.rna.singlets <- ScaleData(ST223.rna.singlets, features = top10$gene)
+
+# 2. Fix FeaturePlot syntax
+Idents(ST223.rna.singlets) <- "donor_id"
+FeaturePlot(ST223.rna.singlets, features = "donor_id") # Use quotes
+
+# 3. Use downsampling in DoHeatmap to prevent 503 crashes
+jpeg("gene_heatmap.jpeg", width = 3000, height = 3000, res = 300)
+DoHeatmap(subset(ST223.rna.singlets, downsample = 100), features = top10$gene) + NoLegend()
+dev.off()
+
+# 4. Define 'donors' before joining (Extract from metadata if that's where it lives)
+donors_df <- ST223.rna.singlets@meta.data
+donors_df$cell <- rownames(donors_df) # Ensure there is a 'cell' column to join on
+
+barcodes.1 <- left_join(donors_df, barcodes, by = "cell")
+
+
 #Find which Donor is which patient based on barcodes
 barcodes.1 <- left_join(donors, barcodes, by = "cell")
 barcodes.1 <- barcodes.1 %>% filter(!is.na(barcode))
-Tot_barcodes=read.table("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/Barcode_Analysis/ST218/ST218_Total_barcode_norm_cell_for_scRNAseq.txt",header=TRUE)
+Tot_barcodes=read.table("/vast/projects/Sisseq/ST223/ST223_all_barcodes.cel.norm.txt",header=TRUE)
 Tot_barcodes=data.frame(Tot_barcodes, barcode=substr(rownames(Tot_barcodes),4,18))
 Tot_barcodes$barcode=gsub(" ", "", Tot_barcodes$barcode)
 Tot_barcodes=Tot_barcodes[rowSums(Tot_barcodes[,1:120])>0,]
@@ -153,3 +173,4 @@ pheatmap(data.matrix(asinh(counts.mgi)),
 DoMultiBarHeatmap(object = m.bm.singlets.mgi, features = top5$gene, group.by="cluster", size = 2 ) + ggtitle("data2_mygenelist")
 
 try <- as.data.frame(t(ST223.rna.singlets@assays$RNA@counts), patient= ST223.rna.singlets@meta.data$donor_id, clusters= ST223.rna.singlets@meta.data$seurat_clusters)
+ 
