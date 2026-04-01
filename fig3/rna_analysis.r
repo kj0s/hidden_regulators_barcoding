@@ -1,4 +1,4 @@
-## ASK FOR THE SPLINTR FILES TO GET THE BARCODES FILE
+# paused for splintr file coming from delumtiplexing :) 
 # install sctransform
 install.packages("sctransform")
 BiocManager::install("glmGamPoi")
@@ -173,4 +173,3 @@ pheatmap(data.matrix(asinh(counts.mgi)),
 DoMultiBarHeatmap(object = m.bm.singlets.mgi, features = top5$gene, group.by="cluster", size = 2 ) + ggtitle("data2_mygenelist")
 
 try <- as.data.frame(t(ST223.rna.singlets@assays$RNA@counts), patient= ST223.rna.singlets@meta.data$donor_id, clusters= ST223.rna.singlets@meta.data$seurat_clusters)
- 
