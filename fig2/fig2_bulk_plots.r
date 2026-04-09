@@ -15,33 +15,20 @@ library(Seurat)
 library(dplyr)
 library(ggplot2)
 
-obj <- readRDS("ST223.annotated_fate.rds")
+obj <- readRDS("/vast/projects/Sisseq/ST223/ST223.annotated_fate.rds")
 
-df <- obj@meta.data %>%
-  dplyr::select(fate_umap, rna_umap, fate_cluster, seurat_clusters) %>%
-  na.omit()
+ST223.annotated_fate@meta.data$rna_umap <- ST223.annotated_fate@reductions$X1d.rna.umap@cell.embeddings[,1]
 
-ggplot(df, aes(x = fate_umap, y = rna_umap, color = as.factor(fate_cluster))) +
+# plot
+ggplot(ST223.annotated_fate@meta.data, aes(x = fate_umap, y = rna_umap, colour = as.factor(fate_cluster))) +
   geom_point(size = 1) +
-  theme_classic() +
-  labs(color = "Fate cluster")
-
-ggplot(df, aes(x = fate_umap, y = rna_umap, color = as.factor(seurat_clusters))) +
-  geom_point(size = 1) +
-  theme_classic() +
-  labs(color = "WNN cluster")
-
-set.seed(18)
-df$random <- runif(nrow(df))
-
-ggplot(df, aes(x = fate_umap, y = random, color = as.factor(fate_cluster))) +
-  geom_point(size = 0.8, alpha = 0.8) +
-  theme_classic()
+  scale_colour_manual(values = cluster_colour) +
+  labs(x = "Fate UMAP 1D", y = "WNN UMAP 1D", colour = "Fate Cluster")
 
 ## check if broken: 
-colnames(obj@meta.data)
-df <- obj@meta.data %>%
-  rename(
-    fate_umap = YOUR_COLUMN,
-    rna_umap = YOUR_OTHER_COLUMN
-  )
+# colnames(obj@meta.data)
+# df <- obj@meta.data %>%
+#  rename(
+#    fate_umap = YOUR_COLUMN,
+#    rna_umap = YOUR_OTHER_COLUMN
+#  )
