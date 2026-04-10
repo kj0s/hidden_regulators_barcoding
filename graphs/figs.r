@@ -1,26 +1,16 @@
-# =========================
-# 1. Install packages (run once)
-# =========================
+
 install.packages(c("dplyr", "ggplot2", "reshape2", "skmeans", "umap"))
 
-# =========================
-# 2. Load libraries
-# =========================
 library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(skmeans)
 library(umap)
 
-# =========================
-# 3. Load your data
-# =========================
 common.cpm <- read.table("ST223_common.barcodes.cpm.txt", header = TRUE)
 common.cell <- read.table("ST223_common.barcodes.cell.txt", header = TRUE)
 
-# =========================
-# 4. Merge replicate plates (cleaned)
-# =========================
+#replicate plate merging
 Samples <- unique(substr(names(common.cell), 1, nchar(names(common.cell)) - 3))
 
 avg <- data.frame(row.names = row.names(common.cell))
@@ -38,15 +28,10 @@ for (s in Samples) {
 colnames(avg) <- new.names
 avg.common.cell.barcodes <- avg
 
-# =========================
-# 5. Log transform
-# =========================
 data_mat <- log2(avg.common.cell.barcodes + 1)
 data_mat <- as.matrix(data_mat)
 
-# =========================
-# 6. Choose cluster number (Elbow plot)
-# =========================
+# elbow plot
 wssplot <- function(data, nc=15){
   wss <- numeric(nc)
   for (i in 1:nc){
@@ -58,17 +43,13 @@ wssplot <- function(data, nc=15){
 
 wssplot(data_mat, nc = 15)
 
-# =========================
-# 7. Clustering
-# =========================
+#clustering
 set.seed(123)
 clusters <- skmeans(data_mat, 10)
 
 avg.common.cell.barcodes$cluster <- as.factor(clusters$cluster)
 
-# =========================
-# 8. UMAP (FATE UMAP)  → FIGURE B
-# =========================
+# Fig b fate + umap
 umap_res <- umap(data_mat)
 
 avg.common.cell.barcodes$UMAP1 <- umap_res$layout[,1]
@@ -82,9 +63,7 @@ p_fate <- ggplot(avg.common.cell.barcodes,
 
 print(p_fate)
 
-# =========================
-# 9. Biomass overlay → FIGURE C
-# =========================
+# overlay biomass
 long <- melt(avg.common.cell.barcodes,
              id.vars = c("cluster", "UMAP1", "UMAP2"))
 
@@ -99,9 +78,7 @@ p_biomass <- ggplot(long,
 
 print(p_biomass)
 
-# =========================
-# 10. Timepoint extraction (if labels exist)
-# =========================
+
 long$day <- case_when(
   grepl("D7", long$variable) ~ "D7",
   grepl("D10", long$variable) ~ "D10",
@@ -112,10 +89,6 @@ long$day <- case_when(
 )
 
 long <- long %>% filter(!is.na(day))
-
-# =========================
-# 11. Line plots → temporal trends
-# =========================
 line_data <- long %>%
   group_by(cluster, day) %>%
   summarise(mean_value = mean(value), .groups = "drop")
@@ -129,9 +102,6 @@ p_line <- ggplot(line_data,
 
 print(p_line)
 
-# =========================
-# 12. Save outputs
-# =========================
 ggsave("Fate_UMAP_clusters.png", p_fate, width = 6, height = 5)
 ggsave("Fate_UMAP_biomass.png", p_biomass, width = 6, height = 5)
 ggsave("Lineage_trends.png", p_line, width = 6, height = 5)
