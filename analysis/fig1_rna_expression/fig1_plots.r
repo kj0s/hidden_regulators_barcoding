@@ -1,19 +1,29 @@
-#Annotation
-#hello
-#Use singleR and Immgen
+# Final Run Check
+# Wed Apr 22 2026
+# KJ 
+# needed files: ST227_Day3_21_GP.rds
+# outputs: RNA_markers.txt
+
+# Installing pckages
 BiocManager::install("SingleR")
 BiocManager::install("BiocManager")
+install.packages("pak")
+pak::pkg_install("immunogenomics/presto")
+
 #finding reference dataset in celldex
 library(celldex)
 library(SingleR)
 library(Seurat)
 library(dplyr)
 surveyReferences()
-# installing devtools, devtools::install_github('immunogenomics/presto')
-# use pak:pak('immunogenomics/presto')
 
-setwd("/vast/projects/Sisseq/")
-ST227 <- readRDS("ST227_Day3_21.rds")
+ST227 <- readRDS(".../ST227_Day3_21_GP.rds")
+
+#Redo clustering and umap for day 3 and 21 only
+ST227 <- FindMultiModalNeighbors(
+  ST227, reduction.list = list("pca", "sketch_apca"), 
+  dims.list = list(1:27, 1:19), modality.weight.name = list("RNA.weight", "ADT.weight")
+)
 
 ST227 <- RunUMAP(ST227, nn.name = "weighted.nn", n.neighbors = 30L, reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
 ST227 <- FindClusters(ST227, graph.name = "wsnn", algorithm = 3, resolution = 1, verbose = FALSE)
@@ -23,6 +33,7 @@ RNA_markers <- FindAllMarkers(ST227, only.pos = TRUE)
 
 DefaultAssay(ST227) <- 'sketch_ADT'
 ADT_markers <- FindAllMarkers(ST227, only.pos = TRUE)
+# note: No features pass logfc.threshold threshold; returning empty data.frame here. 
 
 RNA_markers  %>%
   group_by(cluster) %>%
@@ -31,8 +42,11 @@ RNA_markers  %>%
   ungroup() -> top10
 
 write.table(top10, file= "RNA_markers.txt", sep="\t", row.names=FALSE, col.names=TRUE)
+write.table(top10, file = "/vast/projects/Sisseq/previous_code_test_KJ/intermediates/RNA_markers.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
+
 
 DoHeatmap(ST227, features = top10$gene) + NoLegend()
+# ADT layer empty here. data not normalised?
 
 #Remove contaminating stromal cells
 ST227 <- subset(ST227, idents = c("19", "29"), invert = TRUE)
