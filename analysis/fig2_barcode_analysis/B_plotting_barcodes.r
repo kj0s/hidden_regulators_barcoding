@@ -1,15 +1,8 @@
----
-title: "Bulk_barcode_plots"
-output: html_document
-date: "2025-08-19"
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE---------------------------------------------------------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-#Install pacakges
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 # install.packages("devtools")
 devtools::install_github("vqf/nVennR")
 install.packages("ggimage")
@@ -20,11 +13,9 @@ install.packages("tidyverse")
 install.packages("umap")
 install.packages("scatterpie")
 install.packages("randomcoloR")
-```
 
 
-#Load packages
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 
 library(ggplot2)
 library(pheatmap)
@@ -62,9 +53,9 @@ library(scatterpie)
 library(stringi)
 library(htmlwidgets)
 library(randomcoloR)
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 bias_col = c("1"="#2D004B", "2"="#8073AC", "3"="#D8DAEB", "4"="#FFFFBF", "5"="#FDD0A2", "6"="#FD8D3C", "7"= "#F16913", "8"= "#D94801")
 Group_col = c("2"="#A6CEE3","V"="#1F78B4",
               "P"="#B2DF8A", "1"="#33A02C",
@@ -78,9 +69,9 @@ cluster_colour_seurat <- c("primitive-RBC"= "#1F77B4FF", "Ery"= '#AEC7E8FF', "Mk
 
 pop_col <- c(cDC1= "#1B9E77", cDC2=  "#D95F02", pDC= "#7570B3", Mye= "#E7298A", Mast= "#66A61E", Ery= "#E6AB02", Lymph=  "#A6761D", Rest= "#666666")
   
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 THEME1=theme(text = element_text(size = 20, colour = "black"), 
              plot.title = element_text(size = 11, face = "bold"),
              axis.text.x = element_text(angle = 45, hjust = 1, colour = "black"), 
@@ -140,10 +131,9 @@ THEME5=theme(text = element_text(size = 50, colour = "black"),
              strip.background = element_blank(),
              legend.position = "right"
             )
-```
 
-#Table with all timepoints
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 x <- read.table("ST223_common.barcodes.cpm.txt", header=TRUE)
 all_timepoints <- function(D) {
   dt=data.frame(D, plate=substr(row.names(D),2,3), sample=substr(row.names(D),6,6), protein=substr(row.names(D),49,51), stringsAsFactors = FALSE)
@@ -163,10 +153,9 @@ common.barcodes.cpm.1= all_timepoints(common.barcodes.cpm.plate)
 
 write.table(common.barcodes.cpm.1, file="ST223_common.barcodes.cpm.txt", sep="\t", row.names=TRUE, col.names=TRUE)
 write.table(common.barcodes.cell.1, file="ST223_common.barcodes.cell.txt", sep="\t", row.names=TRUE, col.names=TRUE)
-```
 
-#Cell number across timepoints
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 cell_number <- common.barcodes.cpm.plate
 cell_number <- melt(cell_number, id.vars = c("plate", "day", "patient"))
 cell_number <- subset(cell_number, value>0)
@@ -180,11 +169,9 @@ ggplot(cell_number, aes(x=day, y=tot_numbers, group= variable, colour= variable)
   facet_wrap(~plate , scales = "free")+
 THEME2
 
-```
 
 
-#1dumap clustering
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 library(Matrix)
 library(leiden)
 dt <- common.barcodes.cpm.1
@@ -369,12 +356,9 @@ brewer.pal(8, "Dark2")
 cluster_col <- c("1"= "#1B9E77", "2"= "#D95F02", "3"= "#7570B3", "4"= "#E7298A", "5"= "#66A61E", "6"= "#E6AB02", "7"= "#A6761D", "8"= "#666666")
 
 barcode_col= c("0"= "#E4E4E4", "1" =  "#56106EFF", "5.7" = "#9F2A63FF", "10.4"= "#F57D15FF", "15.4"= "#FAC127FF", "19.9"= "#FCFFA4FF")
-```
 
 
-
-
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 install.packages("paletteer")
 library(paletteer)
 cluster_colour <- paletteer_d("ggthemes::Classic_20",19)
@@ -401,12 +385,9 @@ dt$cluster <- cut_avg
 'correlation', 'euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski'
 
 #maximum cut_tree 17
-```
 
 
-
-#umap
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 library(umap)
 dt <- common.barcodes.cpm.1
 dt[,1:40] <- log2(dt[,1:40]+1)
@@ -439,11 +420,9 @@ ggplot(dt, aes(x= umap1, y=umap2, colour= as.factor(cluster))) +
 
 #u <- umap(dt[,1:8],metric="cosine", min_dist=4, n_neighbors=80, spread=10) not bad
 #u <- umap(dt[,1:8],metric="cosine", min_dist=1, spread=2)
-```
 
 
-#line plot area
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 try <- tot.common
 try$barcode <- rownames(try)
 try$barcode <- gsub("D7_", "", try$barcode )
@@ -487,10 +466,9 @@ ggplot(cDC2, aes(x=day, y=value, group= barcode, fill= barcode)) +
     facet_wrap(~plate)+
   THEME1
 dev.off()
-```
 
-#cosine similarity between barcodes in plate A and plate B
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 library(lsa)
 
 PA <- common.barcodes.cpm.1[grepl('PA', rownames(common.barcodes.cpm.1)), 1:40]
@@ -554,11 +532,9 @@ ggplot(a.1, aes(x= well, y=cosine)) +
     geom_jitter(color="black", size=0.6, alpha=0.9)+
   THEME2
 
-```
 
 
-#line plot area per barcode
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 try <- tot.common
 try[,1:8] <- log2(try[,1:8]+1)
 try$barcode <- rownames(try)
@@ -623,12 +599,9 @@ dev.off()
       facet_wrap(~plate)+
   THEME2 +
     ggtitle(b)
-```
 
 
-
-#Barcode count
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 #Put patients as columns
 cpm.b.common$barcode <- rownames(cpm.b.common)
 patient <-  melt(cpm.b.common,id.vars=c("fate","plate", "day", "sample", "protein", "bin", "fate_bias", "patient", "barcode", "umap1", "umap2"))
@@ -736,10 +709,9 @@ ggplot(bc.count, aes(x=day, y=count, group= variable, colour= variable))+
   facet_wrap(~plate)+
 THEME2
 
-```
 
-#Cosine similarity and clone size consevation
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 library(fuzzyjoin)
 tot_populations.common_A <- tot_populations.common[grepl("PA", rownames(tot_populations.common)),]
 tot_populations.common_B <- tot_populations.common[grepl("PB", rownames(tot_populations.common)),]
@@ -751,11 +723,9 @@ cosine <- tot_populations.common_A %>%
   stringdist_full_join(tot_populations.common_B, by = c('code' = 'code'), 
                        method = "cosine", 
                        distance_col = "distance")
-```
 
 
-#Venn diagram
-```{r}
+## ---------------------------------------------------------------------------------------------------------------------------
 venn <- all_barcodes
 venn <- transmute(venn, PA= rowSums(select(venn, ends_with("PA"))), PB= rowSums(select(venn, ends_with("PB"))), PC= rowSums(select(venn, ends_with("PC"))))
 venn.2 <- transmute(venn, Exp1= rowSums(select(venn, ends_with("PA") | ends_with("PB"))),                       
@@ -799,10 +769,9 @@ myvenn <- plotVenn(venn.PCR.bin, nCycles = 7000, labelRegions = F, fontScale = 3
 myvenn <- plotVenn(venn.2.bin, nCycles = 7000, labelRegions = F, fontScale = 3, setColors = c('orange', 'red'),systemShow= TRUE)
 ggvenn(venn.bin)
 ggvenn(m35.bin[c(1,4,5,11)])
-```
 
-#1d umap transcriptome vs fate
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 ST223.annotated <- readRDS("/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/ST223.annotated.rds")
 
 dt <- common.barcodes.cpm.1
@@ -877,9 +846,9 @@ dev.off()
 
 write.table(transcriptome_vs_fate, file=("transcriptome_vs_fate.txt"), sep="\t", row.names=TRUE, col.names=TRUE)
 read.table()
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 transcriptome_vs_fate.2 <- select(transcriptome_vs_fate, cell, fate_umap, fate_cluster)
 
 ST223.annotated_fate@meta.data <- left_join(ST223.annotated_fate@meta.data, transcriptome_vs_fate.2, by= "cell")
@@ -1085,10 +1054,9 @@ DoHeatmap(ST223.annotated_fate_Ery, features = Ery.de.markers_10$gene) + NoLegen
 dev.off()
 saveRDS(ST223.annotated_fate, file = "/stornext/General/data/academic/lab_naik/Sara_Tomei/R_analysis/10X_Analysis/ST223/ST223.annotated_fate.rds")
 
-```
 
-#Biomass
-```{r}
+
+## ---------------------------------------------------------------------------------------------------------------------------
 dt= biomass
 
 plate = unique(dt$plate)
@@ -1136,4 +1104,3 @@ ggplot(d, aes(x=plot, y=percentage))+
   THEME2
 dev.off()
 getwd()
-```
