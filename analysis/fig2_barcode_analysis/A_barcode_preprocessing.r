@@ -1,7 +1,7 @@
 # Final Run Check
 # Wed Apr 22 2026
 # KJ 
-# needed files: SPLINTR_counts_NGS_ST218.txt, filenames/txt, GFP_reference.txt, BFP_reference.txt, mCh_reference.txt
+# needed files: SPLINTR_counts_NGS_ST218.txt, filenames.txt, GFP_reference.txt, BFP_reference.txt, mCh_reference.txt
 # outputs: raw_total_counts.txt, ST218.1.rds
 
 # file 218.1 needed for fig 3 omics and demultiplexing replaced w pulling the barcodes column from common.barcodes.cell. 
